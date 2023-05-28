@@ -53,15 +53,15 @@ void main(){											\n\
 	colour = vCol;							\n\
 }";
 GLfloat vertices[] = {
-		-1.0,-1.0f, 0.0f,
-		0.0f,-1.0f,1.0f,
-		1.0f, -1.0f, 0.0f,
-		0.0f,1.0f,0.0f
+		-1.0,-2.0f, 0.0f,
+		0.0f,-2.0f,1.0f,
+		1.0f, -2.0f, 0.0f,
+		0.0f,0.0f,0.0f
 };
 GLfloat vertices2[] = {
-	-1.0,1, 0.0f,
-	0.0f,1,1.0f,
-	1.0f, 1, 0.0f,
+	-1.0,0, 0.0f,
+	0.0f,0,1.0f,
+	1.0f, 0, 0.0f,
 	0.0f,2,0.0f
 };
 void createTriangle(GLfloat vertices[]) {
@@ -184,15 +184,19 @@ int main()
 	compilerShader();
 
 	glm::mat4 projection = glm::perspective(45.0f,(GLfloat)bufferWidth/ (GLfloat)bufferHeight,0.1f,100.0f);
-
+	int count = 0;
+	
 	while (!glfwWindowShouldClose(mainWindow)) 
 	{
+		count++;
 		GetSystemTime(&st);
 		endTime = st.wSecond * 1000 + st.wMilliseconds;
 		long long loopTime = milisecPerFrame - (endTime - startTime);
+		std::cout << count << std::endl;
 		if (loopTime > 0) {
 			Sleep(loopTime);
 		}
+
 
 		GetSystemTime(&st);
 		startTime = st.wSecond * 1000 + st.wMilliseconds;
@@ -230,9 +234,8 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glUseProgram(shader);
 
-		glm::mat4 model(1.0f);
+		glm::mat4 model(1.0);
 		model = glm::translate(model, glm::vec3(triOffset, 0, -2.5f));
-//		model = glm::rotate(model, rotation, glm::vec3(0,0,0));
 		model = glm::scale(model, glm::vec3(0.4f, 0.4f,1.0f));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
