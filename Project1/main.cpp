@@ -12,7 +12,7 @@
 #include "Mesh.h"
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.0f;
-Mesh* mesh;
+std::vector<Mesh*> meshList;
 GLuint shader, uniformModel, uniformProjection;
 
 bool direction = true;
@@ -52,21 +52,32 @@ out vec4 colour;										\n\
 void main(){											\n\
 	colour = vCol;							\n\
 }";
-void createTriangle() {
+GLfloat vertices[] = {
+		-1.0,-1.0f, 0.0f,
+		0.0f,-1.0f,1.0f,
+		1.0f, -1.0f, 0.0f,
+		0.0f,1.0f,0.0f
+};
+GLfloat vertices2[] = {
+	-1.0,1, 0.0f,
+	0.0f,1,1.0f,
+	1.0f, 1, 0.0f,
+	0.0f,2,0.0f
+};
+void createTriangle(GLfloat vertices[]) {
 	unsigned int indices[] = {
 		0,3,1,
 		1,3,2,
 		2,3,0,
 		0,1,2
 	};
-	GLfloat vertices[] = {
-		-1.0,-1.0f, 0.0f,
-		0.0f,-1.0f,1.0f,
-		1.0f, -1.0f, 0.0f,
-		0.0f,1.0f,0.0f
-	};
-	mesh = new Mesh();
+	
+	Mesh* mesh = new Mesh();
 	mesh->CreateMesh(vertices,indices , 12,12);
+	meshList.push_back(mesh);
+	std::cout <<std::endl;
+	std::cout << "test mesh size";
+	std::cout << meshList.size()<< std::endl;
 }
 void addShader(GLuint theProgram, const char* shaderCode, GLenum shaderType) 
 {
@@ -168,7 +179,8 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	glViewport(0, 0, bufferWidth, bufferHeight);
-	createTriangle();
+	createTriangle(vertices);
+	createTriangle(vertices2);
 	compilerShader();
 
 	glm::mat4 projection = glm::perspective(45.0f,(GLfloat)bufferWidth/ (GLfloat)bufferHeight,0.1f,100.0f);
@@ -224,9 +236,10 @@ int main()
 		model = glm::scale(model, glm::vec3(0.4f, 0.4f,1.0f));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
-
-		mesh->RenderMesh();
-
+		for (Mesh* mesh : meshList) {
+			mesh->RenderMesh();
+		}
+		
 		glUseProgram(0);
 		glfwSwapBuffers(mainWindow);
 	}

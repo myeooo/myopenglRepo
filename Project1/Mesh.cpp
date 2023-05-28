@@ -44,7 +44,7 @@ void Mesh::CreateMesh(GLfloat* vertices, unsigned int* indices, unsigned int num
 
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0] * numOfVertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * numOfVertices, vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
@@ -60,14 +60,7 @@ void Mesh::CreateMesh(GLfloat* vertices, unsigned int* indices, unsigned int num
 void Mesh::RenderMesh()
 {
 
-	std::cout << "VAO: ";
-	std::cout << VAO << std::endl;
-	std::cout << "VBO: ";
-	std::cout << IBO << std::endl;
-	std::cout << "IBO: ";
-	std::cout << VBO << std::endl;
-	std::cout << "test2: ";
-	std::cout << indexCount << std::endl;
+
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
