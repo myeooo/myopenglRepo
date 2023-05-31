@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <Windows.h>
-
+#include "Window.h"
 #include <vector>
 #include "Mesh.h"
 #include "Shader.h"
@@ -17,7 +17,7 @@ const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.0f;
 std::vector<Mesh*> meshList;
 std::vector<Shader*> shaderList;
-
+Window mainWindow;
 bool direction = true;
 float triOffset = 0.0f;
 float triMaxoffset = 0.7f;
@@ -72,45 +72,17 @@ int main()
 	unsigned long long startTime= st.wSecond * 1000 + st.wMilliseconds;
 	GetSystemTime(&st);
 	unsigned long long endTime ;
-	if (!glfwInit()) {
-		printf("GLFW install failed");
-		glfwTerminate();
-		return 1;
-	}
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	GLFWwindow* mainWindow = glfwCreateWindow(WIDTH, HEIGHT, "meo meo", NULL, NULL);
-	if (!mainWindow) {
-		printf("GLFW window creation failed");
-		return 1;
-	}
-	
-	int bufferWidth, bufferHeight;
-	glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
-	glfwMakeContextCurrent(mainWindow);
-
-	glewExperimental = GL_TRUE;
-	if (glewInit()!= GLEW_OK) {
-		printf("GLEW initialisation failed!");
-		glfwDestroyWindow(mainWindow);
-		glfwTerminate();
-		return 1;
-
-	}
-	glEnable(GL_DEPTH_TEST);
-
-	glViewport(0, 0, bufferWidth, bufferHeight);
+	mainWindow = Window(800, 600);
+	mainWindow.Initialise();
 	createObject(vertices);
 	createObject(vertices);
 	CreateShader();
 	GLuint uniformModel = 0, uniformProjection = 0;
 
-	glm::mat4 projection = glm::perspective(45.0f,(GLfloat)bufferWidth/ (GLfloat)bufferHeight,0.1f,100.0f);
+	glm::mat4 projection = glm::perspective(45.0f,(GLfloat)mainWindow.getBufferWidth()/ (GLfloat)mainWindow.getBufferHeight(), 0.1f, 100.0f);
 	int count = 0;
 	
-	while (!glfwWindowShouldClose(mainWindow)) 
+	while (!mainWindow.getShouldClose()) 
 	{
 		count++;
 		GetSystemTime(&st);
@@ -134,7 +106,6 @@ int main()
 			triOffset -= triIncrement;
 
 		}
-
 		if (zoomIn) {
 			curSize += zoomRate;
 		}
@@ -176,7 +147,7 @@ int main()
 		}
 		
 		glUseProgram(0);
-		glfwSwapBuffers(mainWindow);
+		mainWindow.swapBuffer();
 	}
 	return 0;
 }
