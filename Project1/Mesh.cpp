@@ -53,14 +53,11 @@ void Mesh::CreateMesh(GLfloat* vertices, unsigned int* indices, unsigned int num
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glBindVertexArray(0);
-	std::cout << "test: ";
 	std::cout << indexCount;
 }
 
 void Mesh::RenderMesh()
 {
-
-
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);

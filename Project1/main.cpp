@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <stdio.h>
 #include <string.h>
 #include "GL/glew.h"
@@ -13,6 +15,9 @@
 #include <vector>
 #include "Mesh.h"
 #include "Shader.h"
+#include "Camera.h"
+
+Camera camera;
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.0f;
 std::vector<Mesh*> meshList;
@@ -29,20 +34,21 @@ float zoomRate = 0.0001f;
 float maxSize = 0.8f;
 float minSize = 0.1f;
 
-static const char* vShader = "Shaders/shader.vert"; 
+static const char* vShader = "Shaders/shader.vert";
 
 
 //fragment
 static const char* fShader = "Shaders/shader.frag";
 GLfloat vertices[] = {
-		-1.0,-1.0f, 0.0f,
-		0.0f,-1.0f,1.0f,
+		-1.0, -1.0f, 0.0f,
+		0.0f, -1.0f, 1.0f,
 		1.0f, -1.0f, 0.0f,
-		0.0f,1.0f,0.0f
+		0.0f, 1.0f, 0.0f,
+		0.0f, -1.0f, -1.0f
 };
 
 void CreateShader() {
-	Shader* shader1 = new Shader(); 
+	Shader* shader1 = new Shader();
 	shader1->CreateFromFile(vShader, fShader);
 	shaderList.push_back(shader1);
 }
@@ -50,16 +56,16 @@ void createObject(GLfloat vertices[]) {
 	unsigned int indices[] = {
 		0,3,1,
 		1,3,2,
-		2,3,0,
-		0,1,2
+		0,1,2,
+		0,4,2,
+		0,3,4,
+		2,3,4
 	};
-	
+
 	Mesh* mesh = new Mesh();
-	mesh->CreateMesh(vertices,indices , 12,12);
+	mesh->CreateMesh(vertices, indices, 15, 18);
 	meshList.push_back(mesh);
-	std::cout <<std::endl;
-	std::cout << "test mesh size";
-	std::cout << meshList.size()<< std::endl;
+	std::cout << std::endl;
 }
 
 
@@ -67,22 +73,26 @@ int main()
 {
 	SYSTEMTIME st;
 	GetSystemTime(&st);
-	static int frameRate = 60;
-	unsigned long long milisecPerFrame = 1000 / frameRate;
-	unsigned long long startTime= st.wSecond * 1000 + st.wMilliseconds;
+	static int FPS = 120;
+	unsigned long long milisecPerFrame = 1000 / FPS;
+	unsigned long long startTime = st.wSecond * 1000 + st.wMilliseconds;
 	GetSystemTime(&st);
-	unsigned long long endTime ;
+	unsigned long long endTime;
 	mainWindow = Window(800, 600);
 	mainWindow.Initialise();
 	createObject(vertices);
 	createObject(vertices);
 	CreateShader();
-	GLuint uniformModel = 0, uniformProjection = 0;
 
-	glm::mat4 projection = glm::perspective(45.0f,(GLfloat)mainWindow.getBufferWidth()/ (GLfloat)mainWindow.getBufferHeight(), 0.1f, 100.0f);
+	camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+		-20.0f, 0.0f,5.0f, 0.5f);
+
+	GLuint uniformModel = 0, uniformProjection = 0, uniformView = 0;
+
+	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 100.0f);
 	int count = 0;
-	
-	while (!mainWindow.getShouldClose()) 
+
+	while (!mainWindow.getShouldClose())
 	{
 		count++;
 		GetSystemTime(&st);
@@ -92,60 +102,40 @@ int main()
 			Sleep(loopTime);
 		}
 
-
 		GetSystemTime(&st);
 		startTime = st.wSecond * 1000 + st.wMilliseconds;
-
-		
 		glfwPollEvents();
-
-		if (direction) {
-			triOffset += triIncrement;
-		}
-		else {
-			triOffset -= triIncrement;
-
-		}
-		if (zoomIn) {
-			curSize += zoomRate;
-		}
-		else {
-			curSize -= zoomRate;
-
-		}
-
-		if (curSize <= minSize||curSize >= maxSize) {
-			zoomIn = !zoomIn;
-		}
-		
-
+		camera.keyControll(mainWindow.getsKeys());
+		camera.mouseControl(mainWindow.getXchange(), mainWindow.getYchange());
 		static float rotation = 0 * toRadians;
-		rotation +=2 * toRadians;
+		rotation += 6 * toRadians;
 		if (abs(triOffset) >= triMaxoffset) {
 			direction = !direction;
 		}
-		glClearColor(0.0f,0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		uniformModel = shaderList[0]->GetModelLocation();
 		uniformProjection = shaderList[0]->GetProjectionLocation();
+		uniformView = shaderList[0]->GetViewLocation();
+
 		shaderList[0]->UseShader();
-		glm::mat4 model ;
-		float test = 0.0f;
-		float offset = 0.5f;
-		for (Mesh* mesh : meshList) {
-			
-			offset = -offset;
-			model = glm::mat4(1.0);
-			model = glm::translate(model, glm::vec3(0, offset, -3.0));
-			model = glm::scale(model, glm::vec3(0.4f, 0.4f,1.0f));
-			model = glm::rotate(model, rotation, glm::vec3(0.0f,1,0));
-			glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
-		
-			mesh->RenderMesh();
-			test += 1.0f;
-		}
-		
+		glm::mat4 model;
+
+		model = glm::mat4(1.0);
+		model = glm::translate(model, glm::vec3(0, 1.0, -2.5));
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
+
+		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
+		meshList[0]->RenderMesh();	
+
+		model = glm::mat4(1.0);
+		model = glm::translate(model, glm::vec3(0, -1.0f, -2.5));
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
+
+		meshList[1]->RenderMesh();
+
 		glUseProgram(0);
 		mainWindow.swapBuffer();
 	}
